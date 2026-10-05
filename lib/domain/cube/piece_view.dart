@@ -58,19 +58,19 @@ class PieceView {
   });
 
   // 8 Corner slot facelet indices ordered as: [U/D_face, clockwise_face, counterclockwise_face]
-  // 0: URF -> U(2), R(9), F(20)
-  // 1: ULF -> U(0), F(18), L(38)
-  // 2: ULB -> U(6), L(36), B(47)
-  // 3: URB -> U(8), B(45), R(11)
+  // 0: URF -> U(0), R(9), F(20)
+  // 1: ULF -> U(2), F(18), L(38)
+  // 2: ULB -> U(8), L(36), B(47)
+  // 3: URB -> U(6), B(45), R(11)
   // 4: DRF -> D(29), F(26), R(15)
   // 5: DLF -> D(27), L(44), F(24)
   // 6: DLB -> D(33), B(53), L(42)
   // 7: DRB -> D(35), R(17), B(51)
   static const List<List<int>> cornerIndices = [
-    [2, 9, 20],   // 0: URF
-    [0, 18, 38],  // 1: ULF
-    [6, 36, 47],  // 2: ULB
-    [8, 45, 11],  // 3: URB
+    [0, 9, 20],   // 0: URF
+    [2, 18, 38],  // 1: ULF
+    [8, 36, 47],  // 2: ULB
+    [6, 45, 11],  // 3: URB
     [29, 26, 15], // 4: DRF
     [27, 44, 24], // 5: DLF
     [33, 53, 42], // 6: DLB
@@ -79,9 +79,9 @@ class PieceView {
 
   // 12 Edge slot facelet indices: [primary (U/D/F/B), secondary (R/L)]
   static const List<List<int>> edgeIndices = [
-    [5, 10],  // 0: UR
+    [3, 10],  // 0: UR
     [1, 19],  // 1: UF
-    [3, 37],  // 2: UL
+    [5, 37],  // 2: UL
     [7, 46],  // 3: UB
     [32, 16], // 4: DR
     [28, 25], // 5: DF

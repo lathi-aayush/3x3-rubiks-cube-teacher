@@ -23,16 +23,16 @@ class FaceOrientation {
 
   /// The 6 canonical faces in order: U (0), R (1), F (2), D (3), L (4), B (5).
   static const List<FaceOrientation> orientations = [
-    // 0: Up (White) - row 0 touches Front, row 2 touches Back, col 0 touches Left, col 2 touches Right
+    // 0: Up (White) - row 0 touches Front (Green), row 2 touches Back (Blue), col 0 touches Right (Red), col 2 touches Left (Orange)
     FaceOrientation(
       faceIndex: 0,
       faceName: 'Up (White)',
       centerColor: 0,
       topFace: 2,       // Front (Green)
       bottomFace: 5,    // Back (Blue)
-      leftFace: 4,      // Left (Orange)
-      rightFace: 1,     // Right (Red)
-      orientationHint: 'Front (Green) at top • Back (Blue) at bottom',
+      leftFace: 1,      // Right (Red)
+      rightFace: 4,     // Left (Orange)
+      orientationHint: 'Front (Green) at top • Red at left',
     ),
     // 1: Right (Red) - top touches Up, bottom touches Down, left touches Front, right touches Back
     FaceOrientation(

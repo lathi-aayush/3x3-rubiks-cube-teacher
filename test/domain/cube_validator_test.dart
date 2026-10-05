@@ -43,11 +43,11 @@ void main() {
 
     test('Single twisted corner fails with twistedCorner', () {
       final bad = FaceletConstants.createSolved();
-      // Corner 0 is URF: indices [2, 9, 20]. Twist it:
-      final c0 = bad[2];
+      // Corner 0 is URF: indices [0, 9, 20]. Twist it:
+      final c0 = bad[0];
       final c1 = bad[9];
       final c2 = bad[20];
-      bad[2] = c1;
+      bad[0] = c1;
       bad[9] = c2;
       bad[20] = c0;
 
@@ -58,10 +58,10 @@ void main() {
 
     test('Single flipped edge fails with flippedEdge', () {
       final bad = FaceletConstants.createSolved();
-      // Edge 0 is UR: indices [5, 10]. Flip it:
-      final e0 = bad[5];
+      // Edge 0 is UR: indices [3, 10]. Flip it:
+      final e0 = bad[3];
       final e1 = bad[10];
-      bad[5] = e1;
+      bad[3] = e1;
       bad[10] = e0;
 
       final error = CubeValidator.validate(bad);
@@ -71,10 +71,10 @@ void main() {
 
     test('Two swapped edges fail with parityError', () {
       final bad = FaceletConstants.createSolved();
-      // Swap edge 0 (UR: [5, 10]) and edge 1 (UF: [1, 19])
-      final e0_0 = bad[5];
+      // Swap edge 0 (UR: [3, 10]) and edge 1 (UF: [1, 19])
+      final e0_0 = bad[3];
       final e0_1 = bad[10];
-      bad[5] = bad[1];
+      bad[3] = bad[1];
       bad[10] = bad[19];
       bad[1] = e0_0;
       bad[19] = e0_1;

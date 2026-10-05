@@ -119,9 +119,10 @@ class MoveTables {
     final list = <_StickerCoord>[];
 
     // Face U (0..8): y = 1, normal (0, 1, 0)
-    // Layout: row 0: z=1 (x=-1, 0, 1); row 1: z=0 (x=-1, 0, 1); row 2: z=-1 (x=-1, 0, 1)
+    // Layout: row 0: z=1 (Front/Green at top); row 2: z=-1 (Back/Blue at bottom)
+    // col 0: x=1 (Right/Red at left); col 2: x=-1 (Left/Orange at right)
     for (final z in [1, 0, -1]) {
-      for (final x in [-1, 0, 1]) {
+      for (final x in [1, 0, -1]) {
         list.add(_StickerCoord(x, 1, z, 0, 1, 0));
       }
     }
