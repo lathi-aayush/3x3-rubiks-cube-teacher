@@ -296,7 +296,7 @@ class CubeGeometry {
     Move? activeMove,
     double moveProgress = 0.0, // 0.0 to 1.0
   }) {
-    final light = const Vec3(0.4, 0.9, -0.7).normalized();
+    final light = const Vec3(0.35, 0.65, 0.65).normalized();
     final double moveAngle = activeMove != null
         ? targetAngleForMove(activeMove) * moveProgress
         : 0.0;
@@ -308,6 +308,10 @@ class CubeGeometry {
     final projected = <ProjectedQuad>[];
 
     for (final quad in allQuads) {
+      // When cube is stationary, internal plastic faces are invisible inside the cube.
+      // Only include internal faces when a layer is actively rotating.
+      if (quad.stickerIndex == -1 && activeMove == null) continue;
+
       final inLayer = activeMove != null &&
           isInLayer(activeMove, quad.cx, quad.cy, quad.cz);
 
@@ -333,12 +337,13 @@ class CubeGeometry {
       final edge2 = v2 - v0;
       final normal = edge1.cross(edge2).normalized();
 
-      // Backface culling: discard faces pointing away from the camera
-      if (normal.z <= 0.01) continue;
+      // Backface culling: camera is at +Z looking towards -Z.
+      // Any face pointing towards the camera has normal.z > 0.
+      if (normal.z <= 0.001) continue;
 
-      // Perspective projection
+      // Perspective projection: closer points (higher Z) appear larger
       Offset projectVertex(Vec3 v) {
-        final factor = cameraDist / (v.z + cameraDist);
+        final factor = cameraDist / (cameraDist - v.z);
         return Offset(
           center.dx + v.x * factor * scale,
           center.dy - v.y * factor * scale,
@@ -352,7 +357,7 @@ class CubeGeometry {
 
       final avgDepth = (v0.z + v1.z + v2.z + v3.z) / 4.0;
       final dot = normal.dot(light);
-      final shade = (0.75 + 0.35 * dot).clamp(0.6, 1.15);
+      final shade = (0.80 + 0.30 * dot).clamp(0.70, 1.15);
 
       projected.add(ProjectedQuad(
         points: [p0, p1, p2, p3],
@@ -365,8 +370,10 @@ class CubeGeometry {
       ));
     }
 
-    // Depth sort: render furthest (largest depth) to closest (smallest depth)
-    projected.sort((a, b) => b.depth.compareTo(a.depth));
+    // Painter's algorithm depth sort:
+    // Smallest depth (most negative Z, furthest from camera) rendered FIRST.
+    // Largest depth (most positive Z, closest to camera) rendered LAST.
+    projected.sort((a, b) => a.depth.compareTo(b.depth));
 
     return projected;
   }

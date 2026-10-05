@@ -60,9 +60,9 @@ void main() {
 
       expect(quads.isNotEmpty, isTrue);
 
-      // Depth sorting check: each quad depth <= previous quad depth
+      // Depth sorting check: each quad depth <= next quad depth (ascending)
       for (int i = 0; i < quads.length - 1; i++) {
-        expect(quads[i].depth >= quads[i + 1].depth, isTrue);
+        expect(quads[i].depth <= quads[i + 1].depth, isTrue);
       }
     });
   });

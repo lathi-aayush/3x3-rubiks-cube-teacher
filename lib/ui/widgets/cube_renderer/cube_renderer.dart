@@ -21,8 +21,8 @@ class CubeRenderer extends StatefulWidget {
     required this.facelets,
     this.controller,
     this.highlightedFacelets,
-    this.initialPitch = -0.42,
-    this.initialYaw = -0.68,
+    this.initialPitch = 0.42,
+    this.initialYaw = 0.65,
     this.interactive = true,
     this.onTap,
   });
