@@ -81,8 +81,8 @@ class _CubeRendererState extends State<CubeRenderer> {
         onPanUpdate: widget.interactive
             ? (details) {
                 setState(() {
-                  _pitch = (_pitch - details.delta.dy * 0.009).clamp(-1.45, 1.45);
-                  _yaw = (_yaw + details.delta.dx * 0.009);
+                  _pitch = (_pitch + details.delta.dy * 0.009).clamp(-1.45, 1.45);
+                  _yaw = (_yaw - details.delta.dx * 0.009);
                 });
               }
             : null,
