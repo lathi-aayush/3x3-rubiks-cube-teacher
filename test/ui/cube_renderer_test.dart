@@ -51,6 +51,28 @@ void main() {
       expect(CubeGeometry.isInLayer(Move.B, 0, 0, 1), isFalse);
     });
 
+    test('rotateForMove turns U and D layers in the correct physical direction', () {
+      // For U move: Front (0, 1, 1) should rotate to Left (-1, 1, 0)
+      final uRotated = CubeGeometry.rotateForMove(
+        Move.U,
+        const Vec3(0, 1, 1),
+        CubeGeometry.targetAngleForMove(Move.U),
+      );
+      expect(uRotated.x.round(), -1);
+      expect(uRotated.y.round(), 1);
+      expect(uRotated.z.round(), 0);
+
+      // For D move: Front (0, -1, 1) should rotate to Right (1, -1, 0)
+      final dRotated = CubeGeometry.rotateForMove(
+        Move.D,
+        const Vec3(0, -1, 1),
+        CubeGeometry.targetAngleForMove(Move.D),
+      );
+      expect(dRotated.x.round(), 1);
+      expect(dRotated.y.round(), -1);
+      expect(dRotated.z.round(), 0);
+    });
+
     test('project returns non-empty list of quads sorted by depth', () {
       final quads = CubeGeometry.project(
         size: const Size(300, 300),

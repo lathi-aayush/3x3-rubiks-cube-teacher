@@ -237,11 +237,11 @@ class CubeGeometry {
       case Move.U:
       case Move.Ui:
       case Move.U2:
-        return v.rotateY(angle);
+        return v.rotateY(-angle);
       case Move.D:
       case Move.Di:
       case Move.D2:
-        return v.rotateY(-angle);
+        return v.rotateY(angle);
       case Move.R:
       case Move.Ri:
       case Move.R2:
