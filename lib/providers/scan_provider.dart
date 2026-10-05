@@ -95,6 +95,70 @@ class ScanProvider extends ChangeNotifier {
     }
   }
 
+  /// Rotates the 9 stickers of [faceIndex] by 90 degrees clockwise.
+  void rotateFaceClockwise(int faceIndex) {
+    assert(faceIndex >= 0 && faceIndex < 6);
+    final start = faceIndex * 9;
+    final old = List<int>.from(_facelets.sublist(start, start + 9));
+    _facelets[start + 0] = old[6];
+    _facelets[start + 1] = old[3];
+    _facelets[start + 2] = old[0];
+    _facelets[start + 3] = old[7];
+    _facelets[start + 4] = old[4];
+    _facelets[start + 5] = old[1];
+    _facelets[start + 6] = old[8];
+    _facelets[start + 7] = old[5];
+    _facelets[start + 8] = old[2];
+
+    if (_rawFaceSamples[faceIndex] != null) {
+      final oldSamples = List<LabColor>.from(_rawFaceSamples[faceIndex]!);
+      _rawFaceSamples[faceIndex]![0] = oldSamples[6];
+      _rawFaceSamples[faceIndex]![1] = oldSamples[3];
+      _rawFaceSamples[faceIndex]![2] = oldSamples[0];
+      _rawFaceSamples[faceIndex]![3] = oldSamples[7];
+      _rawFaceSamples[faceIndex]![4] = oldSamples[4];
+      _rawFaceSamples[faceIndex]![5] = oldSamples[1];
+      _rawFaceSamples[faceIndex]![6] = oldSamples[8];
+      _rawFaceSamples[faceIndex]![7] = oldSamples[5];
+      _rawFaceSamples[faceIndex]![8] = oldSamples[2];
+    }
+
+    validate();
+    notifyListeners();
+  }
+
+  /// Rotates the 9 stickers of [faceIndex] by 90 degrees counter-clockwise.
+  void rotateFaceCounterClockwise(int faceIndex) {
+    assert(faceIndex >= 0 && faceIndex < 6);
+    final start = faceIndex * 9;
+    final old = List<int>.from(_facelets.sublist(start, start + 9));
+    _facelets[start + 0] = old[2];
+    _facelets[start + 1] = old[5];
+    _facelets[start + 2] = old[8];
+    _facelets[start + 3] = old[1];
+    _facelets[start + 4] = old[4];
+    _facelets[start + 5] = old[7];
+    _facelets[start + 6] = old[0];
+    _facelets[start + 7] = old[3];
+    _facelets[start + 8] = old[6];
+
+    if (_rawFaceSamples[faceIndex] != null) {
+      final oldSamples = List<LabColor>.from(_rawFaceSamples[faceIndex]!);
+      _rawFaceSamples[faceIndex]![0] = oldSamples[2];
+      _rawFaceSamples[faceIndex]![1] = oldSamples[5];
+      _rawFaceSamples[faceIndex]![2] = oldSamples[8];
+      _rawFaceSamples[faceIndex]![3] = oldSamples[1];
+      _rawFaceSamples[faceIndex]![4] = oldSamples[4];
+      _rawFaceSamples[faceIndex]![5] = oldSamples[7];
+      _rawFaceSamples[faceIndex]![6] = oldSamples[0];
+      _rawFaceSamples[faceIndex]![7] = oldSamples[3];
+      _rawFaceSamples[faceIndex]![8] = oldSamples[6];
+    }
+
+    validate();
+    notifyListeners();
+  }
+
   /// Validates the 54 facelet array using CubeValidator.
   bool validate() {
     if (!isScanComplete) {

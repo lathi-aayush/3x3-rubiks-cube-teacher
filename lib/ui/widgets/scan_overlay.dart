@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
+import '../../domain/cube/face_orientation.dart';
+
 class ScanOverlay extends StatelessWidget {
   final String faceName;
   final int faceIndex;
@@ -15,20 +17,24 @@ class ScanOverlay extends StatelessWidget {
     this.isScanning = false,
   });
 
-  static const List<String> orientationInstructions = [
-    'Face White to camera • Green in front',
-    'Face Red to camera • Keep White on top',
-    'Face Green to camera • Keep White on top',
-    'Face Yellow to camera • Green at top',
-    'Face Orange to camera • Keep White on top',
-    'Face Blue to camera • Keep White on top',
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final ori = FaceOrientation.forFace(faceIndex);
+    final topOri = FaceOrientation.forFace(ori.topFace);
+    final botOri = FaceOrientation.forFace(ori.bottomFace);
+    final leftOri = FaceOrientation.forFace(ori.leftFace);
+    final rightOri = FaceOrientation.forFace(ori.rightFace);
+
+    final topColor = AppTheme.cubeColor(topOri.centerColor);
+    final botColor = AppTheme.cubeColor(botOri.centerColor);
+    final leftColor = AppTheme.cubeColor(leftOri.centerColor);
+    final rightColor = AppTheme.cubeColor(rightOri.centerColor);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final boxSize = constraints.maxWidth * 0.78;
+        final centerY = constraints.maxHeight / 2;
+        final centerX = constraints.maxWidth / 2;
 
         return Stack(
           children: [
@@ -72,6 +78,100 @@ class ScanOverlay extends StatelessWidget {
                 ),
                 child: CustomPaint(
                   painter: _GridPainter(borderColor: AppTheme.primaryLight.withOpacity(0.6)),
+                ),
+              ),
+            ),
+
+            // Top adjacent face indicator
+            Positioned(
+              top: centerY - boxSize / 2 - 32,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: topColor, width: 1.2),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(width: 8, height: 8, decoration: BoxDecoration(color: topColor, shape: BoxShape.circle)),
+                      const SizedBox(width: 6),
+                      Text('▲ Top: ${topOri.faceName}', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Bottom adjacent face indicator
+            Positioned(
+              top: centerY + boxSize / 2 + 10,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: botColor, width: 1.2),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(width: 8, height: 8, decoration: BoxDecoration(color: botColor, shape: BoxShape.circle)),
+                      const SizedBox(width: 6),
+                      Text('▼ Bottom: ${botOri.faceName}', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Left adjacent face indicator
+            Positioned(
+              left: (centerX - boxSize / 2 - 42).clamp(4.0, centerX - 10),
+              top: centerY - 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: leftColor, width: 1),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(width: 8, height: 8, decoration: BoxDecoration(color: leftColor, shape: BoxShape.circle)),
+                    const SizedBox(height: 2),
+                    Text(leftOri.faceName.split(' ')[0], style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+            ),
+
+            // Right adjacent face indicator
+            Positioned(
+              right: (centerX - boxSize / 2 - 42).clamp(4.0, centerX - 10),
+              top: centerY - 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: rightColor, width: 1),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(width: 8, height: 8, decoration: BoxDecoration(color: rightColor, shape: BoxShape.circle)),
+                    const SizedBox(height: 2),
+                    Text(rightOri.faceName.split(' ')[0], style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
+                  ],
                 ),
               ),
             ),
@@ -124,7 +224,7 @@ class ScanOverlay extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            orientationInstructions[faceIndex.clamp(0, 5)],
+                            ori.orientationHint,
                             style: const TextStyle(
                               color: AppTheme.primaryLight,
                               fontSize: 11,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../domain/cube/face_orientation.dart';
 import '../../providers/scan_provider.dart';
 import '../../providers/teaching_provider.dart';
 import '../theme/app_theme.dart';
@@ -31,7 +32,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
       // Center sticker is fixed
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Center sticker cannot be modified.'),
+          content: Text('Center sticker cannot be modified — it defines face identity.'),
           duration: Duration(seconds: 1),
         ),
       );
@@ -54,6 +55,96 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
     );
   }
 
+  void _showFullNetModal(BuildContext context, ScanProvider scanProv) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surfaceDark,
+          title: Row(
+            children: const [
+              Icon(Icons.view_in_ar_rounded, color: AppTheme.primaryLight),
+              SizedBox(width: 10),
+              Text('Unfolded Cube Net'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Tap any face to inspect or correct its stickers:',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                _buildCubeNet(ctx, scanProv),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCubeNet(BuildContext ctx, ScanProvider scanProv) {
+    const miniSize = 58.0;
+
+    Widget miniFace(int faceIndex) {
+      final isCurrent = _selectedFace == faceIndex;
+      final faceColors = scanProv.facelets.sublist(faceIndex * 9, faceIndex * 9 + 9);
+
+      return GestureDetector(
+        onTap: () {
+          setState(() => _selectedFace = faceIndex);
+          Navigator.of(ctx).pop();
+        },
+        child: Container(
+          width: miniSize,
+          height: miniSize,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isCurrent ? AppTheme.primaryLight : AppTheme.borderDark,
+              width: isCurrent ? 2.5 : 1.0,
+            ),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: FaceGrid(faceColors: faceColors),
+        ),
+      );
+    }
+
+    final emptySpace = const SizedBox(width: miniSize, height: miniSize);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Top row: U (face 0)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [emptySpace, miniFace(0), emptySpace, emptySpace],
+        ),
+        const SizedBox(height: 4),
+        // Middle row: L (4), F (2), R (1), B (5)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [miniFace(4), miniFace(2), miniFace(1), miniFace(5)],
+        ),
+        const SizedBox(height: 4),
+        // Bottom row: D (3)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [emptySpace, miniFace(3), emptySpace, emptySpace],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scanProv = context.watch<ScanProvider>();
@@ -66,10 +157,17 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
       _selectedFace * 9 + 9,
     );
 
+    final orientation = FaceOrientation.forFace(_selectedFace);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Verify & Correct Colors'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.view_in_ar_rounded),
+            tooltip: 'View Full Cube Net',
+            onPressed: () => _showFullNetModal(context, scanProv),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Reset Scan',
@@ -85,15 +183,27 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
           children: [
             // Face selection tabs
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: List.generate(6, (i) {
                     final isSelected = _selectedFace == i;
+                    final ori = FaceOrientation.forFace(i);
+                    final centerColor = AppTheme.cubeColor(ori.centerColor);
+
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ChoiceChip(
+                        avatar: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: centerColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white30),
+                          ),
+                        ),
                         label: Text(_faceNames[i]),
                         selected: isSelected,
                         onSelected: (_) => setState(() => _selectedFace = i),
@@ -104,35 +214,121 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
               ),
             ),
 
-            const SizedBox(height: 10),
-
             // Instruction subtitle
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Tap any sticker that looks wrong to fix its color.',
+                'Verify stickers match your cube. The 4 borders show the adjacent centers.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 13),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
-            // 3x3 Grid
+            // Main Face Area with 4 Adjacent Center Orientation Indicators
             Expanded(
               child: Center(
-                child: Container(
-                  width: 280,
-                  height: 280,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceDark,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: AppTheme.borderDark),
-                  ),
-                  child: FaceGrid(
-                    faceColors: currentFaceColors,
-                    onStickerTap: _onStickerTapped,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // TOP adjacent center indicator
+                      _AdjacentFacePill(
+                        direction: 'TOP',
+                        faceIndex: orientation.topFace,
+                        onTap: () => setState(() => _selectedFace = orientation.topFace),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Middle Row: LEFT pill, 3x3 Grid, RIGHT pill
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // LEFT adjacent center indicator
+                          _AdjacentFaceSidePill(
+                            direction: 'LEFT',
+                            faceIndex: orientation.leftFace,
+                            onTap: () => setState(() => _selectedFace = orientation.leftFace),
+                          ),
+
+                          const SizedBox(width: 10),
+
+                          // 3x3 Grid
+                          Container(
+                            width: 220,
+                            height: 220,
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppTheme.surfaceDark,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppTheme.borderDark, width: 1.5),
+                            ),
+                            child: FaceGrid(
+                              faceColors: currentFaceColors,
+                              onStickerTap: _onStickerTapped,
+                            ),
+                          ),
+
+                          const SizedBox(width: 10),
+
+                          // RIGHT adjacent center indicator
+                          _AdjacentFaceSidePill(
+                            direction: 'RIGHT',
+                            faceIndex: orientation.rightFace,
+                            onTap: () => setState(() => _selectedFace = orientation.rightFace),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // BOTTOM adjacent center indicator
+                      _AdjacentFacePill(
+                        direction: 'BOTTOM',
+                        faceIndex: orientation.bottomFace,
+                        onTap: () => setState(() => _selectedFace = orientation.bottomFace),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Orientation Hint
+                      Text(
+                        orientation.orientationHint,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.primaryLight,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // Rotate Face Action Buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: () => scanProv.rotateFaceCounterClockwise(_selectedFace),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            ),
+                            icon: const Icon(Icons.rotate_left_rounded, size: 18),
+                            label: const Text('Rotate 90° ↺', style: TextStyle(fontSize: 12)),
+                          ),
+                          const SizedBox(width: 12),
+                          OutlinedButton.icon(
+                            onPressed: () => scanProv.rotateFaceClockwise(_selectedFace),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            ),
+                            icon: const Icon(Icons.rotate_right_rounded, size: 18),
+                            label: const Text('Rotate 90° ↻', style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -140,8 +336,8 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
 
             // Validation Status Banner
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: isValid
                     ? AppTheme.success.withOpacity(0.12)
@@ -167,7 +363,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
                           : (validationError?.message ?? 'Please check sticker counts.'),
                       style: TextStyle(
                         color: isValid ? AppTheme.success : AppTheme.error,
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -178,7 +374,7 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
 
             // Bottom Start Lesson CTA
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -194,6 +390,137 @@ class _CorrectionScreenState extends State<CorrectionScreen> {
                   icon: const Icon(Icons.school_rounded),
                   label: const Text('Start Solving Lesson'),
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AdjacentFacePill extends StatelessWidget {
+  final String direction;
+  final int faceIndex;
+  final VoidCallback onTap;
+
+  const _AdjacentFacePill({
+    required this.direction,
+    required this.faceIndex,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ori = FaceOrientation.forFace(faceIndex);
+    final color = AppTheme.cubeColor(ori.centerColor);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceDark,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withOpacity(0.55), width: 1.2),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              direction == 'TOP' ? Icons.arrow_drop_up_rounded : Icons.arrow_drop_down_rounded,
+              size: 20,
+              color: color,
+            ),
+            const SizedBox(width: 4),
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white30, width: 0.8),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '$direction: ${ori.faceName}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color == Colors.white ? Colors.white : color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AdjacentFaceSidePill extends StatelessWidget {
+  final String direction;
+  final int faceIndex;
+  final VoidCallback onTap;
+
+  const _AdjacentFaceSidePill({
+    required this.direction,
+    required this.faceIndex,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ori = FaceOrientation.forFace(faceIndex);
+    final color = AppTheme.cubeColor(ori.centerColor);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 66,
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceDark,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.55), width: 1.2),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              direction == 'LEFT' ? Icons.arrow_left_rounded : Icons.arrow_right_rounded,
+              size: 20,
+              color: color,
+            ),
+            const SizedBox(height: 2),
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white30, width: 0.8),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              direction,
+              style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textSecondary,
+                letterSpacing: 0.5,
+              ),
+            ),
+            Text(
+              ori.faceName.split(' ')[0],
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color == Colors.white ? Colors.white : color,
               ),
             ),
           ],

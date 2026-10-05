@@ -58,20 +58,50 @@ class CubeValidator {
 
     // Verify all 8 corners are valid unique pieces
     final cornerPositions = view.corners.map((c) => c.position).toList();
-    if (cornerPositions.any((pos) => pos < 0 || pos > 7) ||
-        cornerPositions.toSet().length != 8) {
+    for (int slot = 0; slot < 8; slot++) {
+      if (cornerPositions[slot] < 0) {
+        final idxs = PieceView.cornerIndices[slot];
+        final colors = idxs.map((i) => _colorName(facelets[i])).join(', ');
+        return ValidationError(
+          message: 'Invalid corner piece at ${_cornerSlotNames[slot]} ($colors). Opposite colors cannot share a corner. Check face orientation!',
+          kind: ValidationKind.twistedCorner,
+        );
+      }
+    }
+    if (cornerPositions.toSet().length != 8) {
+      for (int i = 0; i < 8; i++) {
+        for (int j = i + 1; j < 8; j++) {
+          if (cornerPositions[i] == cornerPositions[j]) {
+            final idxs = PieceView.cornerIndices[i];
+            final colors = idxs.map((idx) => _colorName(facelets[idx])).join(', ');
+            return ValidationError(
+              message: 'Corner ($colors) is duplicated between ${_cornerSlotNames[i]} and ${_cornerSlotNames[j]}. Check face orientation!',
+              kind: ValidationKind.twistedCorner,
+            );
+          }
+        }
+      }
       return const ValidationError(
-        message: 'Corner pieces are misplaced or duplicated.',
+        message: 'Corner pieces are misplaced or duplicated. Check face orientation!',
         kind: ValidationKind.twistedCorner,
       );
     }
 
     // Verify all 12 edges are valid unique pieces
     final edgePositions = view.edges.map((e) => e.position).toList();
-    if (edgePositions.any((pos) => pos < 0 || pos > 11) ||
-        edgePositions.toSet().length != 12) {
+    for (int slot = 0; slot < 12; slot++) {
+      if (edgePositions[slot] < 0) {
+        final idxs = PieceView.edgeIndices[slot];
+        final colors = idxs.map((i) => _colorName(facelets[i])).join(', ');
+        return ValidationError(
+          message: 'Invalid edge piece at ${_edgeSlotNames[slot]} ($colors). Opposite colors cannot share an edge. Check face orientation!',
+          kind: ValidationKind.flippedEdge,
+        );
+      }
+    }
+    if (edgePositions.toSet().length != 12) {
       return const ValidationError(
-        message: 'Edge pieces are misplaced or duplicated.',
+        message: 'Edge pieces are misplaced or duplicated. Check face orientation!',
         kind: ValidationKind.flippedEdge,
       );
     }
@@ -126,4 +156,33 @@ class CubeValidator {
 
     return (perm.length - cycles) % 2;
   }
+
+  static String _colorName(int c) {
+    switch (c) {
+      case 0: return 'White';
+      case 1: return 'Yellow';
+      case 2: return 'Green';
+      case 3: return 'Blue';
+      case 4: return 'Red';
+      case 5: return 'Orange';
+      default: return 'Color $c';
+    }
+  }
+
+  static const List<String> _cornerSlotNames = [
+    'Up-Right-Front (URF)',
+    'Up-Left-Front (ULF)',
+    'Up-Left-Back (ULB)',
+    'Up-Right-Back (URB)',
+    'Down-Right-Front (DRF)',
+    'Down-Left-Front (DLF)',
+    'Down-Left-Back (DLB)',
+    'Down-Right-Back (DRB)',
+  ];
+
+  static const List<String> _edgeSlotNames = [
+    'Up-Right (UR)', 'Up-Front (UF)', 'Up-Left (UL)', 'Up-Back (UB)',
+    'Down-Right (DR)', 'Down-Front (DF)', 'Down-Left (DL)', 'Down-Back (DB)',
+    'Front-Right (FR)', 'Front-Left (FL)', 'Back-Left (BL)', 'Back-Right (BR)',
+  ];
 }
