@@ -19,9 +19,9 @@ class ColorClassifier {
       : assert(centers.length == 6, 'Must provide exactly 6 center colors'),
         _centers = List.unmodifiable(centers);
 
-  /// Default baseline reference classifier using standard color definitions.
-  factory ColorClassifier.defaultReference() {
-    final ref = [
+  /// Returns default baseline reference centers in [U, R, F, D, L, B] order.
+  static List<LabColor> defaultReferenceCenters() {
+    return [
       LabColor.fromRGB(255, 255, 255), // White (U)
       LabColor.fromRGB(239, 68, 68),   // Red (R)
       LabColor.fromRGB(34, 197, 94),   // Green (F)
@@ -29,7 +29,11 @@ class ColorClassifier {
       LabColor.fromRGB(249, 115, 22),  // Orange (L)
       LabColor.fromRGB(59, 130, 246),  // Blue (B)
     ];
-    return ColorClassifier.fromCenters(ref);
+  }
+
+  /// Default baseline reference classifier using standard color definitions.
+  factory ColorClassifier.defaultReference() {
+    return ColorClassifier.fromCenters(defaultReferenceCenters());
   }
 
   /// Classifies a sample LabColor to the nearest of the 6 calibrated colors.

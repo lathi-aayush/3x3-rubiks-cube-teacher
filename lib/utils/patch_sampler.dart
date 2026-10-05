@@ -1,25 +1,35 @@
+import 'dart:math';
 import 'package:image/image.dart' as img;
 import 'lab_color.dart';
 
 class PatchSampler {
   /// Samples 9 center patches from a 3x3 grid within [image].
-  /// [patchRatio] is the fraction of cell width/height to sample around the center (default 0.20 = center 20%).
+  /// [boxRatio] is the fraction of min(width, height) the square grid occupies.
+  /// Defaults to 1.0 (fills entire image if square).
+  /// For camera scanning with a centered square viewfinder, pass [boxRatio: 0.78].
+  /// [patchRatio] is the fraction of each 3x3 cell's width/height sampled around its center.
   /// Returns a list of 9 [LabColor] instances in row-major order:
   /// [0: top-left, 1: top-center, 2: top-right,
   ///  3: mid-left, 4: center,     5: mid-right,
   ///  6: bot-left, 7: bot-center, 8: bot-right]
   static List<LabColor> sampleFaceletColors(
     img.Image image, {
+    double boxRatio = 1.0,
     double patchRatio = 0.20,
   }) {
     final colors = <LabColor>[];
-    final cellWidth = image.width / 3.0;
-    final cellHeight = image.height / 3.0;
+    final minDim = min(image.width, image.height).toDouble();
+    final boxSize = minDim * boxRatio;
+    final boxLeft = (image.width - boxSize) / 2.0;
+    final boxTop = (image.height - boxSize) / 2.0;
+
+    final cellWidth = boxSize / 3.0;
+    final cellHeight = boxSize / 3.0;
 
     for (int row = 0; row < 3; row++) {
       for (int col = 0; col < 3; col++) {
-        final cellCenterX = (col + 0.5) * cellWidth;
-        final cellCenterY = (row + 0.5) * cellHeight;
+        final cellCenterX = boxLeft + (col + 0.5) * cellWidth;
+        final cellCenterY = boxTop + (row + 0.5) * cellHeight;
 
         final halfPatchW = (cellWidth * patchRatio) / 2.0;
         final halfPatchH = (cellHeight * patchRatio) / 2.0;

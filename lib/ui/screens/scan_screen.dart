@@ -63,9 +63,10 @@ class _ScanScreenState extends State<ScanScreen> {
       if (_cameraController != null && _cameraController!.value.isInitialized) {
         final xfile = await _cameraController!.takePicture();
         final bytes = await xfile.readAsBytes();
-        final img = img_lib.decodeImage(Uint8List.fromList(bytes));
+        var img = img_lib.decodeImage(Uint8List.fromList(bytes));
         if (img != null) {
-          final sampled = PatchSampler.sampleFaceletColors(img);
+          img = img_lib.bakeOrientation(img);
+          final sampled = PatchSampler.sampleFaceletColors(img, boxRatio: 0.78);
           scanProv.captureCurrentFace(sampled);
         } else {
           _fallbackCaptureFace(scanProv);

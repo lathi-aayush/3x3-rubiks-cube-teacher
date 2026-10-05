@@ -15,6 +15,15 @@ class ScanOverlay extends StatelessWidget {
     this.isScanning = false,
   });
 
+  static const List<String> orientationInstructions = [
+    'Face White to camera • Green in front',
+    'Face Red to camera • Keep White on top',
+    'Face Green to camera • Keep White on top',
+    'Face Yellow to camera • Green at top',
+    'Face Orange to camera • Keep White on top',
+    'Face Blue to camera • Keep White on top',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -102,13 +111,27 @@ class ScanOverlay extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Text(
-                        'Align Face: $faceName',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Align Face: $faceName',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            orientationInstructions[faceIndex.clamp(0, 5)],
+                            style: const TextStyle(
+                              color: AppTheme.primaryLight,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

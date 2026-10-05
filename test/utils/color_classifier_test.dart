@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:rubiks_cube_teacher/domain/detection/color_classifier.dart';
 import 'package:rubiks_cube_teacher/domain/models/cube_color.dart';
+import 'package:rubiks_cube_teacher/domain/cube/facelets.dart';
+import 'package:rubiks_cube_teacher/providers/scan_provider.dart';
 import 'package:rubiks_cube_teacher/utils/lab_color.dart';
 import 'package:rubiks_cube_teacher/utils/patch_sampler.dart';
 
@@ -80,6 +82,66 @@ void main() {
       expect(classifier.classify(sampled[6]), CubeColor.white);
       expect(classifier.classify(sampled[7]), CubeColor.red);
       expect(classifier.classify(sampled[8]), CubeColor.green);
+    });
+
+    test('PatchSampler with boxRatio on portrait image samples centered box', () {
+      final portrait = img.Image(width: 1080, height: 1920);
+      // Fill entire background with black
+      for (int y = 0; y < 1920; y++) {
+        for (int x = 0; x < 1080; x++) {
+          portrait.setPixelRgb(x, y, 0, 0, 0);
+        }
+      }
+      // Fill centered box with white
+      const boxSize = 1080 * 0.78;
+      final boxLeft = ((1080 - boxSize) / 2).toInt();
+      final boxTop = ((1920 - boxSize) / 2).toInt();
+      for (int y = boxTop; y < boxTop + boxSize.toInt(); y++) {
+        for (int x = boxLeft; x < boxLeft + boxSize.toInt(); x++) {
+          portrait.setPixelRgb(x, y, 255, 255, 255);
+        }
+      }
+
+      final sampled = PatchSampler.sampleFaceletColors(portrait, boxRatio: 0.78);
+      final classifier = ColorClassifier.defaultReference();
+      for (int i = 0; i < 9; i++) {
+        expect(classifier.classify(sampled[i]), CubeColor.white,
+            reason: 'Sticker $i inside centered box should be white');
+      }
+    });
+
+    test('ScanProvider calibrates 6 centers and correctly recognizes solved cube', () {
+      final scanProv = ScanProvider();
+
+      // Simulated real-world lighting colors for the 6 faces (U, R, F, D, L, B)
+      // Notice slight lighting variations (indoor warm LED):
+      final faceBaseColors = [
+        LabColor.fromRGB(240, 240, 235), // White with slight warm tint
+        LabColor.fromRGB(215, 45, 40),   // Red
+        LabColor.fromRGB(30, 185, 75),   // Green
+        LabColor.fromRGB(245, 215, 55),  // Yellow
+        LabColor.fromRGB(235, 110, 25),  // Orange
+        LabColor.fromRGB(45, 115, 235),  // Blue
+      ];
+
+      for (int f = 0; f < 6; f++) {
+        final base = faceBaseColors[f];
+        // 9 stickers on face f with small sensor noise:
+        final sampled9 = List.generate(9, (i) {
+          return LabColor(base.l + (i % 2 == 0 ? 0.5 : -0.5), base.a, base.b);
+        });
+        scanProv.captureCurrentFace(sampled9);
+      }
+
+      expect(scanProv.isScanComplete, isTrue);
+      expect(scanProv.validate(), isTrue);
+      expect(scanProv.validationError, isNull);
+
+      // Verify the 54 facelets match FaceletConstants.solved!
+      for (int i = 0; i < 54; i++) {
+        expect(scanProv.facelets[i], FaceletConstants.solved[i],
+            reason: 'Facelet $i should match solved state');
+      }
     });
   });
 }

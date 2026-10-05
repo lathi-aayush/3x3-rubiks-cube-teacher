@@ -19,6 +19,9 @@ class ScanProvider extends ChangeNotifier {
   // 6 calibrated center LAB values: U, R, F, D, L, B
   final List<LabColor?> _centerLabs = List<LabColor?>.filled(6, null);
 
+  // Raw sampled 9 patches per face: allows re-evaluating with calibrated classifier
+  final List<List<LabColor>?> _rawFaceSamples = List<List<LabColor>?>.filled(6, null);
+
   ColorClassifier? _classifier;
   ValidationError? _validationError;
   ValidationError? get validationError => _validationError;
@@ -29,25 +32,13 @@ class ScanProvider extends ChangeNotifier {
   void captureCurrentFace(List<LabColor> sampled9) {
     assert(sampled9.length == 9);
 
+    final faceIdx = _currentFaceIndex;
+    _rawFaceSamples[faceIdx] = List<LabColor>.from(sampled9);
     // Center sticker is at index 4 of the 3x3 patch
-    _centerLabs[_currentFaceIndex] = sampled9[4];
+    _centerLabs[faceIdx] = sampled9[4];
 
-    // If all 6 centers are calibrated, create trained classifier; otherwise use default reference
-    if (_centerLabs.every((c) => c != null)) {
-      _classifier = ColorClassifier.fromCenters(_centerLabs.cast<LabColor>());
-    } else {
-      _classifier ??= ColorClassifier.defaultReference();
-    }
-
-    final startIndex = _currentFaceIndex * 9;
-    for (int i = 0; i < 9; i++) {
-      if (i == 4) {
-        // Fix center sticker to its designated face color
-        _facelets[startIndex + i] = defaultCenters[_currentFaceIndex];
-      } else {
-        _facelets[startIndex + i] = _classifier!.classifyInt(sampled9[i]);
-      }
-    }
+    // Reclassify all faces with the latest centers
+    _reclassifyScannedFaces();
 
     // Move to next face if not at the end
     if (_currentFaceIndex < 5) {
@@ -56,6 +47,35 @@ class ScanProvider extends ChangeNotifier {
 
     validate();
     notifyListeners();
+  }
+
+  void _reclassifyScannedFaces() {
+    // If all 6 centers are calibrated, create trained classifier from the physical cube
+    if (_centerLabs.every((c) => c != null)) {
+      _classifier = ColorClassifier.fromCenters(_centerLabs.cast<LabColor>());
+    } else {
+      // Build hybrid reference: real center if already scanned, otherwise default reference
+      final hybridCenters = <LabColor>[];
+      final defaultCentersRef = ColorClassifier.defaultReferenceCenters();
+      for (int i = 0; i < 6; i++) {
+        hybridCenters.add(_centerLabs[i] ?? defaultCentersRef[i]);
+      }
+      _classifier = ColorClassifier.fromCenters(hybridCenters);
+    }
+
+    // Reclassify every face that has been scanned so far
+    for (int f = 0; f < 6; f++) {
+      final samples = _rawFaceSamples[f];
+      if (samples == null) continue;
+      final startIndex = f * 9;
+      for (int i = 0; i < 9; i++) {
+        if (i == 4) {
+          _facelets[startIndex + i] = defaultCenters[f];
+        } else {
+          _facelets[startIndex + i] = _classifier!.classifyInt(samples[i]);
+        }
+      }
+    }
   }
 
   /// Manually update a single sticker's color (used on Correction Screen).
@@ -94,6 +114,7 @@ class ScanProvider extends ChangeNotifier {
     _currentFaceIndex = 0;
     _facelets.fillRange(0, 54, -1);
     _centerLabs.fillRange(0, 6, null);
+    _rawFaceSamples.fillRange(0, 6, null);
     _classifier = null;
     _validationError = null;
     notifyListeners();
