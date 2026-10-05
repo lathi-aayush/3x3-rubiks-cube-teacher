@@ -171,13 +171,22 @@ class MoveTables {
     return list;
   }
 
-  static int _findSticker(int x, int y, int z, int nx, int ny, int nz) {
+  static int findSticker(int x, int y, int z, int nx, int ny, int nz) =>
+      _findSticker(x, y, z, nx, ny, nz);
+
+  static int findStickerOrNull(int x, int y, int z, int nx, int ny, int nz) {
     for (int i = 0; i < 54; i++) {
       final c = _coords[i];
       if (c.x == x && c.y == y && c.z == z && c.nx == nx && c.ny == ny && c.nz == nz) {
         return i;
       }
     }
+    return -1;
+  }
+
+  static int _findSticker(int x, int y, int z, int nx, int ny, int nz) {
+    final idx = findStickerOrNull(x, y, z, nx, ny, nz);
+    if (idx != -1) return idx;
     throw StateError('Sticker not found at ($x, $y, $z) norm ($nx, $ny, nz)');
   }
 
