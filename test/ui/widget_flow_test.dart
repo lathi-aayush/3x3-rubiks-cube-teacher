@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rubiks_cube_teacher/data/session_repository.dart';
 import 'package:rubiks_cube_teacher/domain/cube/facelets.dart';
-import 'package:rubiks_cube_teacher/domain/models/cube_color.dart';
 import 'package:rubiks_cube_teacher/providers/scan_provider.dart';
 import 'package:rubiks_cube_teacher/providers/teaching_provider.dart';
 import 'package:rubiks_cube_teacher/providers/session_provider.dart';

@@ -128,43 +128,50 @@ class HomeScreen extends StatelessWidget {
               ],
 
               // Primary CTA: Scan Cube
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppTheme.primary.withOpacity(0.25),
-                      AppTheme.surfaceDark,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => context.push('/scan'),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppTheme.borderDark),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.camera_alt_rounded, color: AppTheme.primaryLight, size: 36),
-                    const SizedBox(height: 14),
-                    Text(
-                      'Scan Your Cube',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 22),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Point your camera at each of the 6 faces. We will guide you to solve it step-by-step.',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => context.push('/scan'),
-                        child: const Text('Start Scanning'),
+                  child: Ink(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.primary.withOpacity(0.25),
+                          AppTheme.surfaceDark,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: AppTheme.borderDark),
                     ),
-                  ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.camera_alt_rounded, color: AppTheme.primaryLight, size: 36),
+                        const SizedBox(height: 14),
+                        Text(
+                          'Scan Your Cube',
+                          style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 22),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Point your camera at each of the 6 faces. We will guide you to solve it step-by-step.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => context.push('/scan'),
+                            child: const Text('Start Scanning'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
 
